@@ -2,33 +2,38 @@
 
 <! -- STEP 1  -->
 <h1> All Transactions </h1>
-<ol>
-  <% transactions = Transaction.all.includes(:from_user, :to_user) %>
+<% transactions = Transaction.all %>
 
-  <% transactions.each do |transaction| %>
-    <% if transaction.from_user.present? %>
-      <li><%= "#{transaction.amount} KC from #{transaction.from_user.name} to #{transaction.to_user.name}" %></li>
+<ol>
+  <% for transaction in transactions %>
+    <% if transaction.from_user_id != nil %>
+      <li><%= "#{transaction.amount} KC from #{User.find(transaction.from_user_id).name} to #{User.find(transaction.to_user_id).name}" %></li>
     <% else %>
-      <li><%= "Initial coin offering: #{transaction.amount} to #{transaction.to_user.name}" %></li>
+      <li><%= "Initial coin offering: #{transaction.amount} to #{User.find(transaction.to_user_id).name}" %></li>
     <% end %>
   <% end %>
 </ol>
 
 <! -- STEP 2  -->
-<h1> Closing Balances </h1>
+<h1>Closing Balance</h1>
+
 <% balances = Hash.new(0) %>
+<% transactions = Transaction.all %>
 
-<% transactions = Transaction.all.includes(:from_user, :to_user) %>
-
-<% transactions.each do |transaction| %>
-  <% if transaction.from_user %>
-    <% balances[transaction.from_user.name] -= transaction.amount %>
+<% for transaction in transactions %>
+  <% if transaction.from_user_id != nil %>
+    <% from_user = User.find(transaction.from_user_id) %>
+    <% balances[from_user.name] -= transaction.amount %>
   <% end %>
-  <% balances[transaction.to_user.name] += transaction.amount %>
+
+  <% to_user = User.find(transaction.to_user_id) %>
+  <% balances[to_user.name] += transaction.amount %>
 <% end %>
 
 <ul>
-  <% balances.each do |name, balance| %>
+  <% for pair in balances %>
+    <% name = pair[0] %>
+    <% balance = pair[1] %>
     <li>Balance for <%= name %>: <%= balance %> KC</li>
   <% end %>
 </ul>
